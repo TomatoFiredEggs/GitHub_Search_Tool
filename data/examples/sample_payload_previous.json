@@ -1,0 +1,45 @@
+{
+  "total_count": 3,
+  "incomplete_results": false,
+  "items": [
+    {
+      "full_name": "open-vision/fast-agent",
+      "html_url": "https://github.com/open-vision/fast-agent",
+      "description": "A lightweight agent runtime for developer workflows.",
+      "language": "Python",
+      "stargazers_count": 1610,
+      "forks_count": 131,
+      "watchers_count": 1610,
+      "open_issues_count": 15,
+      "created_at": "2026-03-03T10:00:00Z",
+      "updated_at": "2026-03-21T08:00:00Z",
+      "topics": ["agent", "automation", "llm"]
+    },
+    {
+      "full_name": "infra-lab/shipyard",
+      "html_url": "https://github.com/infra-lab/shipyard",
+      "description": "Self-hosted deployment orchestration toolkit.",
+      "language": "Go",
+      "stargazers_count": 1180,
+      "forks_count": 79,
+      "watchers_count": 1180,
+      "open_issues_count": 12,
+      "created_at": "2026-03-08T12:00:00Z",
+      "updated_at": "2026-03-22T05:30:00Z",
+      "topics": ["devops", "kubernetes", "platform"]
+    },
+    {
+      "full_name": "ai-labs/prompt-bench",
+      "html_url": "https://github.com/ai-labs/prompt-bench",
+      "description": "Benchmark suite for prompt evaluation.",
+      "language": "Rust",
+      "stargazers_count": 760,
+      "forks_count": 44,
+      "watchers_count": 760,
+      "open_issues_count": 6,
+      "created_at": "2026-03-10T09:00:00Z",
+      "updated_at": "2026-03-20T11:00:00Z",
+      "topics": ["benchmark", "llm", "rust"]
+    }
+  ]
+}

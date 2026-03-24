@@ -76,6 +76,61 @@ def render_report(analysis: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_comparison_report(comparison: dict) -> str:
+    lines = [
+        "# GitHub Hotspot Comparison Report",
+        "",
+        f"- Generated at: {comparison['generated_at']}",
+        f"- Previous repositories: {comparison['previous_summary']['total_repositories']}",
+        f"- Current repositories: {comparison['current_summary']['total_repositories']}",
+        f"- Previous top language: {comparison['previous_summary']['top_language']}",
+        f"- Current top language: {comparison['current_summary']['top_language']}",
+        "",
+        "## New Entries",
+        "",
+    ]
+
+    if comparison["new_entries"]:
+        for repo in comparison["new_entries"]:
+            lines.append(
+                f"- [{repo['full_name']}]({repo['html_url']}): {repo['current_stars']} stars, language {repo['language']}"
+            )
+    else:
+        lines.append("- No new repositories entered the snapshot.")
+
+    lines.extend(["", "## Top Star Gainers", ""])
+    if comparison["top_star_gainers"]:
+        for repo in comparison["top_star_gainers"]:
+            lines.append(
+                f"- [{repo['full_name']}]({repo['html_url']}): +{repo['stars_delta']} stars "
+                f"({repo['previous_stars']} -> {repo['current_stars']})"
+            )
+    else:
+        lines.append("- No overlapping repositories were found.")
+
+    lines.extend(["", "## Top Rank Climbers", ""])
+    if comparison["top_rank_climbers"]:
+        for repo in comparison["top_rank_climbers"]:
+            lines.append(
+                f"- [{repo['full_name']}]({repo['html_url']}): up {repo['rank_delta']} positions "
+                f"({repo['previous_rank']} -> {repo['current_rank']})"
+            )
+    else:
+        lines.append("- No repositories improved their rank between the two snapshots.")
+
+    lines.extend(["", "## Language Changes", ""])
+    if comparison["language_changes"]:
+        for item in comparison["language_changes"]:
+            sign = "+" if item["delta"] > 0 else ""
+            lines.append(
+                f"- {item['language']}: {item['previous_count']} -> {item['current_count']} ({sign}{item['delta']})"
+            )
+    else:
+        lines.append("- No language distribution changes detected.")
+
+    return "\n".join(lines) + "\n"
+
+
 def save_report(report_content: str, output_path: str | Path | None = None) -> Path:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     target = Path(output_path) if output_path else REPORTS_DIR / default_report_filename()
@@ -86,4 +141,3 @@ def save_report(report_content: str, output_path: str | Path | None = None) -> P
 
 def default_report_filename() -> str:
     return f"github_hotspot_report_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.md"
-

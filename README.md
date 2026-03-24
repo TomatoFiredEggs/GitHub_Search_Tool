@@ -1,91 +1,140 @@
 # GitHub Hotspot Analyzer
 
-A small but real portfolio project that fetches hot open source repositories from GitHub, scores them, and generates a readable Markdown report.
+GitHub Hotspot Analyzer is a lightweight data analysis project for tracking recently popular open source repositories on GitHub. It fetches repository snapshots, scores them with a simple ranking model, and produces readable Markdown reports for review, sharing, or personal research.
 
-## What It Does
+## Why This Project Exists
 
-- Fetches recently created popular repositories through the GitHub Search API
-- Stores raw snapshots locally for reproducible analysis
-- Computes a hotspot score from stars, forks, watchers, freshness, and activity
-- Generates a Markdown report you can publish or review locally
+When browsing GitHub manually, it is easy to notice isolated trending repositories but hard to compare them consistently over time. This project was built to solve three practical problems:
+
+- capture a reproducible snapshot instead of relying on the live UI
+- rank repositories with a transparent scoring model
+- compare multiple snapshots to see which projects are gaining momentum
+
+## Features
+
+- Fetch hot repositories from the GitHub Search API
+- Save raw JSON snapshots for reproducible analysis
+- Score repositories using stars, forks, watchers, freshness, and activity
+- Generate Markdown reports for a single snapshot
+- Compare two snapshots to detect new entries, star growth, rank changes, and language shifts
+- Run fully offline with bundled example datasets
 
 ## Project Layout
 
 ```text
 .
-├─ data/
-│  ├─ examples/
-│  └─ raw/
-├─ reports/
-├─ src/
-│  └─ gh_hotspot_analyzer/
-└─ tests/
+|-- data/
+|   |-- examples/
+|   `-- raw/
+|-- reports/
+|-- src/
+|   `-- gh_hotspot_analyzer/
+`-- tests/
 ```
 
 ## Quick Start
 
-### 1. Install
+### Install
 
 ```bash
 pip install -e .
 ```
 
-### 2. Configure
+### Configure GitHub Token
 
-Copy `.env.example` to `.env` and set your GitHub token:
+Copy `.env.example` to `.env` and fill in a GitHub token:
 
 ```env
 GITHUB_TOKEN=ghp_xxx
 ```
 
-You can still run the project without a token, but GitHub API rate limits will be much lower.
+The token is optional, but strongly recommended because unauthenticated API requests are rate-limited.
 
-### 3. Fetch and generate a report
+### Fetch a Snapshot and Build a Report
 
 ```bash
 gh-hotspot run --days 30 --limit 30
 ```
 
-Generated files:
+Outputs:
 
-- raw payloads go to `data/raw/`
-- Markdown reports go to `reports/`
+- raw snapshots are written to `data/raw/`
+- reports are written to `reports/`
 
-## Example Commands
+## Commands
+
+Fetch data:
 
 ```bash
-gh-hotspot fetch --days 14 --limit 20 --output data/raw/sample.json
-gh-hotspot analyze --input data/raw/sample.json
-gh-hotspot report --input data/raw/sample.json --output reports/manual-report.md
+gh-hotspot fetch --days 14 --limit 20 --output data/raw/snapshot.json
+```
+
+Analyze a local snapshot as JSON:
+
+```bash
+gh-hotspot analyze --input data/raw/snapshot.json
+```
+
+Generate a Markdown report:
+
+```bash
+gh-hotspot report --input data/raw/snapshot.json --output reports/hotspot-report.md
+```
+
+Compare two snapshots:
+
+```bash
+gh-hotspot compare --previous data/examples/sample_payload_previous.json --current data/examples/sample_payload.json --output reports/comparison-report.md
+```
+
+Run tests:
+
+```bash
 python -m unittest discover -s tests
 ```
 
 ## Offline Demo
 
-The repository includes a sample payload so the project can be demonstrated without hitting the network:
+This repository includes bundled example data so the full workflow can be demonstrated without network access.
+
+Single snapshot report:
 
 ```bash
-gh-hotspot analyze --input data/examples/sample_payload.json
 gh-hotspot report --input data/examples/sample_payload.json --output reports/sample-report.md
 ```
 
-## Suggested Commit Sequence
+Snapshot comparison report:
 
-If you want this repository to reflect real work, keep the history honest and incremental:
+```bash
+gh-hotspot compare --previous data/examples/sample_payload_previous.json --current data/examples/sample_payload.json --output reports/sample-comparison-report.md
+```
 
-1. `chore: initialize project skeleton`
-2. `feat: add github repository fetcher`
-3. `feat: implement repository scoring and analytics`
-4. `feat: generate markdown hotspot report`
-5. `test: add analyzer unit tests`
-6. `docs: improve setup and usage notes`
+## Analysis Model
 
-## Next Iterations
+The current hotspot score combines:
 
-- Add historical snapshot comparison
-- Generate charts in HTML
-- Add scheduled daily reports
-- Classify projects by topic clusters
+- stargazers
+- forks
+- watchers
+- recent creation bonus
+- recent update bonus
+- open issue penalty
+
+The goal is not to produce a perfect ranking model. The goal is to provide a simple, inspectable baseline that can be iterated on later.
+
+## What The Comparison Report Highlights
+
+- newly appeared repositories in the latest snapshot
+- repositories with the largest star increase
+- repositories that climbed in ranking
+- changes in language distribution between snapshots
+
+## Roadmap
+
+- add historical snapshots over more than two periods
+- generate HTML charts and dashboards
+- support scheduled daily report generation
+- classify projects by topic clusters
 
 ## License
 

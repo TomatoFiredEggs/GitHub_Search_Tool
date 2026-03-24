@@ -1,6 +1,6 @@
 import unittest
 
-from gh_hotspot_analyzer.analyzer import analyze_payload, compute_score
+from gh_hotspot_analyzer.analyzer import analyze_payload, compare_payloads, compute_score
 
 
 def sample_repo(**overrides):
@@ -34,6 +34,24 @@ class AnalyzerTests(unittest.TestCase):
         self.assertIn("Python", analysis["language_distribution"])
         self.assertGreaterEqual(analysis["top_repositories"][0]["score"], analysis["top_repositories"][1]["score"])
 
+    def test_compare_payloads_detects_new_entries_and_growth(self):
+        previous_payload = {
+            "items": [
+                sample_repo(full_name="demo/repo1", stargazers_count=100, language="Python"),
+                sample_repo(full_name="demo/repo2", stargazers_count=80, language="Go"),
+            ]
+        }
+        current_payload = {
+            "items": [
+                sample_repo(full_name="demo/repo1", stargazers_count=130, language="Python"),
+                sample_repo(full_name="demo/repo3", stargazers_count=95, language="Rust"),
+            ]
+        }
+        comparison = compare_payloads(previous_payload, current_payload)
+        self.assertEqual(comparison["new_entries"][0]["full_name"], "demo/repo3")
+        self.assertEqual(comparison["top_star_gainers"][0]["full_name"], "demo/repo1")
+        self.assertEqual(comparison["top_star_gainers"][0]["stars_delta"], 30)
+        self.assertTrue(any(item["language"] == "Rust" for item in comparison["language_changes"]))
+
 if __name__ == "__main__":
     unittest.main()
-
