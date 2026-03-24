@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from html import escape
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -131,6 +132,286 @@ def render_comparison_report(comparison: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_html_report(analysis: dict) -> str:
+    summary = analysis["summary"]
+    language_bars = render_metric_bars(analysis["language_distribution"])
+    topic_bars = render_metric_bars(analysis["topic_distribution"])
+    top_rows = "\n".join(
+        [
+            "<tr>"
+            f"<td>{index}</td>"
+            f"<td><a href=\"{escape(repo['html_url'])}\">{escape(repo['full_name'])}</a></td>"
+            f"<td>{escape(repo['language'])}</td>"
+            f"<td>{repo['stars']}</td>"
+            f"<td>{repo['score']}</td>"
+            f"<td>{escape(repo['updated_at'][:10])}</td>"
+            "</tr>"
+            for index, repo in enumerate(analysis["top_repositories"], start=1)
+        ]
+    )
+    active_cards = "\n".join(
+        [
+            "<article class=\"mini-card\">"
+            f"<h3><a href=\"{escape(repo['html_url'])}\">{escape(repo['full_name'])}</a></h3>"
+            f"<p>Inactive for {repo['inactive_days']} day(s)</p>"
+            f"<strong>Score {repo['score']}</strong>"
+            "</article>"
+            for repo in analysis["most_active"]
+        ]
+    )
+    opportunity_cards = "\n".join(
+        [
+            "<article class=\"mini-card\">"
+            f"<h3><a href=\"{escape(repo['html_url'])}\">{escape(repo['full_name'])}</a></h3>"
+            f"<p>Created {repo['freshness_days']} day(s) ago</p>"
+            f"<strong>{repo['stars']} stars</strong>"
+            "</article>"
+            for repo in analysis["new_opportunities"]
+        ]
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub Hotspot Dashboard</title>
+  <style>
+    :root {{
+      --bg: #f4f1e8;
+      --panel: #fffdf8;
+      --ink: #1f2a1f;
+      --muted: #5f6b61;
+      --line: #d8d0c2;
+      --accent: #0f766e;
+      --accent-soft: #d7efe7;
+      --accent-warm: #d97706;
+      --shadow: 0 16px 40px rgba(31, 42, 31, 0.08);
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.14), transparent 32%),
+        radial-gradient(circle at top right, rgba(217, 119, 6, 0.14), transparent 28%),
+        var(--bg);
+      color: var(--ink);
+    }}
+    .page {{
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 48px 20px 64px;
+    }}
+    .hero {{
+      padding: 28px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,253,248,0.98), rgba(215,239,231,0.82));
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }}
+    .eyebrow {{
+      margin: 0 0 12px;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }}
+    h1, h2, h3, p {{
+      margin-top: 0;
+    }}
+    h1 {{
+      margin-bottom: 12px;
+      font-size: clamp(36px, 6vw, 64px);
+      line-height: 0.95;
+    }}
+    .hero p {{
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 18px;
+    }}
+    .stats {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }}
+    .stat-card, .panel, .mini-card {{
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }}
+    .stat-card {{
+      padding: 18px 20px;
+    }}
+    .stat-card span {{
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }}
+    .stat-card strong {{
+      font-size: 28px;
+    }}
+    .layout {{
+      display: grid;
+      grid-template-columns: 1.8fr 1fr;
+      gap: 20px;
+      margin-top: 24px;
+    }}
+    .panel {{
+      padding: 22px;
+    }}
+    .panel-header {{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }}
+    .panel-header p {{
+      color: var(--muted);
+      margin-bottom: 0;
+    }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 14px;
+    }}
+    th, td {{
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }}
+    th {{
+      color: var(--muted);
+      font-weight: 600;
+    }}
+    a {{
+      color: var(--accent);
+      text-decoration: none;
+    }}
+    a:hover {{
+      text-decoration: underline;
+    }}
+    .bars {{
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }}
+    .bar-row {{
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }}
+    .bar-track {{
+      height: 12px;
+      border-radius: 999px;
+      background: #efe8da;
+      overflow: hidden;
+    }}
+    .bar-fill {{
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-warm));
+    }}
+    .stack {{
+      display: grid;
+      gap: 20px;
+    }}
+    .mini-grid {{
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }}
+    .mini-card {{
+      padding: 18px;
+    }}
+    .mini-card p {{
+      color: var(--muted);
+      margin-bottom: 10px;
+    }}
+    @media (max-width: 900px) {{
+      .layout {{
+        grid-template-columns: 1fr;
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Open Source Momentum Tracker</p>
+      <h1>GitHub Hotspot Dashboard</h1>
+      <p>Snapshot generated at {escape(analysis['generated_at'])}. This report summarizes the hottest repositories in the current dataset and highlights language concentration, active projects, and newly emerging opportunities.</p>
+      <div class="stats">
+        <article class="stat-card"><span>Total Repositories</span><strong>{summary['total_repositories']}</strong></article>
+        <article class="stat-card"><span>Top Language</span><strong>{escape(summary['top_language'])}</strong></article>
+        <article class="stat-card"><span>Average Score</span><strong>{summary['average_score']}</strong></article>
+      </div>
+    </section>
+    <section class="layout">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Top Repositories</h2>
+            <p>Ranked by hotspot score</p>
+          </div>
+          <table>
+            <thead>
+              <tr><th>#</th><th>Repository</th><th>Language</th><th>Stars</th><th>Score</th><th>Updated</th></tr>
+            </thead>
+            <tbody>
+              {top_rows}
+            </tbody>
+          </table>
+        </section>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Opportunity Watchlist</h2>
+            <p>Recent repositories worth following</p>
+          </div>
+          <div class="mini-grid">
+            {opportunity_cards}
+          </div>
+        </section>
+      </div>
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Language Mix</h2>
+            <p>Distribution in this snapshot</p>
+          </div>
+          <div class="bars">{language_bars}</div>
+        </section>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Topic Signals</h2>
+            <p>Most common repository tags</p>
+          </div>
+          <div class="bars">{topic_bars}</div>
+        </section>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Most Active</h2>
+            <p>Projects updated most recently</p>
+          </div>
+          <div class="mini-grid">
+            {active_cards}
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+"""
+
+
 def save_report(report_content: str, output_path: str | Path | None = None) -> Path:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     target = Path(output_path) if output_path else REPORTS_DIR / default_report_filename()
@@ -141,3 +422,33 @@ def save_report(report_content: str, output_path: str | Path | None = None) -> P
 
 def default_report_filename() -> str:
     return f"github_hotspot_report_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.md"
+
+
+def save_html_report(report_content: str, output_path: str | Path | None = None) -> Path:
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    target = Path(output_path) if output_path else REPORTS_DIR / default_html_report_filename()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(report_content, encoding="utf-8")
+    return target
+
+
+def default_html_report_filename() -> str:
+    return f"github_hotspot_dashboard_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.html"
+
+
+def render_metric_bars(distribution: dict[str, int]) -> str:
+    if not distribution:
+        return '<p class="empty">No data available.</p>'
+
+    peak = max(distribution.values())
+    rows = []
+    for label, value in distribution.items():
+        width = round((value / peak) * 100, 2) if peak else 0
+        rows.append(
+            "<div class=\"bar-row\">"
+            f"<span>{escape(label)}</span>"
+            f"<div class=\"bar-track\"><div class=\"bar-fill\" style=\"width: {width}%\"></div></div>"
+            f"<strong>{value}</strong>"
+            "</div>"
+        )
+    return "\n".join(rows)

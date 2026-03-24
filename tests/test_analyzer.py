@@ -1,6 +1,7 @@
 import unittest
 
 from gh_hotspot_analyzer.analyzer import analyze_payload, compare_payloads, compute_score
+from gh_hotspot_analyzer.report import render_html_report
 
 
 def sample_repo(**overrides):
@@ -52,6 +53,14 @@ class AnalyzerTests(unittest.TestCase):
         self.assertEqual(comparison["top_star_gainers"][0]["full_name"], "demo/repo1")
         self.assertEqual(comparison["top_star_gainers"][0]["stars_delta"], 30)
         self.assertTrue(any(item["language"] == "Rust" for item in comparison["language_changes"]))
+
+    def test_render_html_report_contains_dashboard_sections(self):
+        analysis = analyze_payload({"items": [sample_repo(), sample_repo(full_name="demo/repo2", language="Go")]})
+        html = render_html_report(analysis)
+        self.assertIn("<title>GitHub Hotspot Dashboard</title>", html)
+        self.assertIn("Top Repositories", html)
+        self.assertIn("Language Mix", html)
+        self.assertIn("demo/repo", html)
 
 if __name__ == "__main__":
     unittest.main()

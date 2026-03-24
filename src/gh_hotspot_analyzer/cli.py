@@ -5,7 +5,7 @@ import json
 
 from .analyzer import analyze_payload, compare_payloads
 from .github_client import FetchOptions, GitHubClient, load_payload, save_payload
-from .report import render_comparison_report, render_report, save_report
+from .report import render_comparison_report, render_html_report, render_report, save_html_report, save_report
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -23,6 +23,10 @@ def build_parser() -> argparse.ArgumentParser:
     report_parser = subparsers.add_parser("report", help="Generate a report from a saved GitHub payload.")
     report_parser.add_argument("--input", type=str, required=True)
     report_parser.add_argument("--output", type=str, default=None)
+
+    html_report_parser = subparsers.add_parser("html-report", help="Generate an HTML dashboard from a saved GitHub payload.")
+    html_report_parser.add_argument("--input", type=str, required=True)
+    html_report_parser.add_argument("--output", type=str, default=None)
 
     compare_parser = subparsers.add_parser("compare", help="Compare two saved GitHub payloads.")
     compare_parser.add_argument("--previous", type=str, required=True)
@@ -61,6 +65,14 @@ def main() -> None:
         report_content = render_report(analysis)
         path = save_report(report_content, args.output)
         print(f"Saved report to: {path}")
+        return
+
+    if args.command == "html-report":
+        payload = load_payload(args.input)
+        analysis = analyze_payload(payload)
+        report_content = render_html_report(analysis)
+        path = save_html_report(report_content, args.output)
+        print(f"Saved HTML report to: {path}")
         return
 
     if args.command == "compare":

@@ -16,6 +16,7 @@ When browsing GitHub manually, it is easy to notice isolated trending repositori
 - Save raw JSON snapshots for reproducible analysis
 - Score repositories using stars, forks, watchers, freshness, and activity
 - Generate Markdown reports for a single snapshot
+- Generate static HTML dashboards for a single snapshot
 - Compare two snapshots to detect new entries, star growth, rank changes, and language shifts
 - Run fully offline with bundled example datasets
 
@@ -81,6 +82,12 @@ Generate a Markdown report:
 gh-hotspot report --input data/raw/snapshot.json --output reports/hotspot-report.md
 ```
 
+Generate a static HTML dashboard:
+
+```bash
+gh-hotspot html-report --input data/raw/snapshot.json --output reports/hotspot-dashboard.html
+```
+
 Compare two snapshots:
 
 ```bash
@@ -101,6 +108,12 @@ Single snapshot report:
 
 ```bash
 gh-hotspot report --input data/examples/sample_payload.json --output reports/sample-report.md
+```
+
+Single snapshot HTML dashboard:
+
+```bash
+gh-hotspot html-report --input data/examples/sample_payload.json --output reports/sample-dashboard.html
 ```
 
 Snapshot comparison report:
