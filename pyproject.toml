@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gh-hotspot-analyzer"
+version = "0.1.0"
+description = "Analyze trending open source repositories on GitHub and generate readable Markdown reports."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = []
+
+[project.scripts]
+gh-hotspot = "gh_hotspot_analyzer.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
